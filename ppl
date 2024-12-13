@@ -1,0 +1,138 @@
+import random
+import time
+
+def load_flashcards(filename="flashcards.txt"):
+    flashcards = []
+    try:
+        with open(filename, "r") as file:
+            for line in file:
+                parts = line.strip().split("=")
+                if len(parts) == 3:
+                    question, answer, hint = parts
+                elif len(parts) == 2:
+                    question, answer = parts
+                    hint = "No hint"
+                else:
+                    continue  
+                flashcards.append((question, answer, hint))
+    except FileNotFoundError:
+        pass
+    return flashcards
+
+def save_flashcards(flashcards, filename="flashcards.txt"):
+    with open(filename, "w") as file:
+        for question, answer, hint in flashcards:
+            file.write(f"{question}={answer}={hint}\n")
+
+def add_flashcard(flashcards, filename):
+    question = input("Enter the question: ")
+    answer = input("Enter the answer: ")
+    hint = input("Enter a hint (optional): ")
+    flashcards.append((question, answer, hint if hint else "No hint"))
+    save_flashcards(flashcards, filename)
+    print("Flashcard added successfully!")
+
+def review_flashcards(flashcards):
+    if not flashcards:
+        print("No flashcards available. Add some first!")
+        return
+
+    for i, (question, answer, hint) in enumerate(flashcards):
+        print(f"{i+1}. Question: {question}")
+        user_answer = input("Your Answer: ")
+        if user_answer.strip().lower() == answer.strip().lower():
+            print("Correct!")
+        else:
+            print(f"Incorrect! The correct answer is: {answer}. Hint: {hint}")
+
+def quiz_flashcards(flashcards, timed=False):
+    if not flashcards:
+        print("No flashcards available for quizzing.")
+        return
+
+    score = 0
+    total_questions = len(flashcards)
+    random.shuffle(flashcards)
+
+    for question, answer, hint in flashcards:
+        if timed:
+            start_time = time.time()
+        user_answer = input(f"Q: {question} (Hint: {hint})\nYour Answer: ")
+        if timed:
+            elapsed_time = time.time() - start_time
+            print(f"Time taken: {elapsed_time:.2f} seconds")
+
+        if user_answer.strip().lower() == answer.strip().lower():
+            print("Correct!")
+            score += 1
+        else:
+            print(f"Incorrect! The correct answer is: {answer}")
+
+    print(f"\nYou got {score} out of {total_questions} correct!")
+    if score == total_questions:
+        print("Excellent! You nailed it!")
+    elif score > total_questions // 2:
+        print("Good job! You're getting there!")
+    else:
+        print("Keep practicing! You'll improve!")
+
+def edit_flashcard(flashcards, filename):
+    review_flashcards(flashcards)
+    idx = int(input("Enter the number of the flashcard you want to edit: ")) - 1
+    if 0 <= idx < len(flashcards):
+        question, answer, hint = flashcards[idx]
+        question = input(f"Enter new question (or press Enter to keep '{question}'): ") or question
+        answer = input(f"Enter new answer (or press Enter to keep '{answer}'): ") or answer
+        hint = input(f"Enter new hint (or press Enter to keep '{hint}'): ") or hint
+        flashcards[idx] = (question, answer, hint)
+        save_flashcards(flashcards, filename)
+        print("Flashcard updated successfully!")
+    else:
+        print("Invalid flashcard number!")
+
+def delete_flashcard(flashcards, filename):
+    review_flashcards(flashcards)
+    idx = int(input("Enter the number of the flashcard you want to delete: ")) - 1
+    if 0 <= idx < len(flashcards):
+        del flashcards[idx]
+        save_flashcards(flashcards, filename)
+        print("Flashcard deleted successfully!")
+    else:
+        print("Invalid flashcard number!")
+
+def main():
+    filename = "flashcards.txt"
+    flashcards = load_flashcards(filename)
+
+    while True:
+        print("\nFlashcard Creator!!!")
+        print("1. Add Flashcard")
+        print("2. Review Flashcards")
+        print("3. Quiz Yourself")
+        print("4. Timed Quiz")
+        print("5. Edit Flashcard")
+        print("6. Delete Flashcard")
+        print("7. Exit")
+        choice = input("Choose an option: ")
+
+        if choice == "1":
+            add_flashcard(flashcards, filename)
+        elif choice == "2":
+            review_flashcards(flashcards)
+        elif choice == "3":
+            quiz_flashcards(flashcards)
+        elif choice == "4":
+            quiz_flashcards(flashcards, timed=True)
+        elif choice == "5":
+            edit_flashcard(flashcards, filename)
+        elif choice == "6":
+            delete_flashcard(flashcards, filename)
+        elif choice == "7":
+            save_flashcards(flashcards, filename)
+            print("Goodbye!")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+if __name__ == "__main__":
+    main()
